@@ -7,18 +7,15 @@ import java.util.Scanner;
 
 /**
  * CalculatorAppController — unified stateful input controller.
- * Evaluates after 2 blank lines, exits after 3.
+ * Evaluates after two blank lines, exits after three.
  */
 public class CalculatorAppController {
 
     private final Scanner scanner = new Scanner(System.in);
     private final CalculatorEngine engine = new CalculatorEngine();
 
-    private static final int EVAL_THRESHOLD = 2;
-    private static final int EXIT_THRESHOLD = 3;
-
     public void run() {
-        System.out.println("🧮 Unified Stateful Java Calculator (Phase A–C+)");
+        System.out.println("🧮 Unified Stateful Java Calculator (Production)");
         System.out.println(Constants.PROMPT_INPUT);
         System.out.println();
 
@@ -35,17 +32,14 @@ public class CalculatorAppController {
             if (line.isEmpty()) {
                 blankCount++;
 
-                if (blankCount == EVAL_THRESHOLD) {
+                if (blankCount == Constants.EVAL_THRESHOLD) {
                     evaluateBuffer(buffer);
                 }
-                if (blankCount >= EXIT_THRESHOLD) break;
+                if (blankCount >= Constants.EXIT_THRESHOLD) break;
 
             } else {
-                // user typed something, reset blank counter
                 blankCount = 0;
-
-                // append space if needed
-                if (buffer.length() > 0) buffer.append(' ');
+                if (!buffer.isEmpty()) buffer.append(' ');
                 buffer.append(line);
             }
         }
@@ -54,19 +48,19 @@ public class CalculatorAppController {
     }
 
     private void evaluateBuffer(StringBuilder buffer) {
-        if (buffer.length() == 0) {
+        if (buffer.isEmpty()) {
             System.err.println(Constants.ERROR_EMPTY);
             return;
         }
 
         try {
             double result = engine.evaluate(buffer.toString());
-            System.out.printf("%s %.8f   [%s]%n",
-                    Constants.RESULT_PREFIX, result, buffer.toString());
+            System.out.printf("%s %.2f   [%s]%n",
+                    Constants.RESULT_PREFIX, result, buffer);
         } catch (Exception e) {
             System.err.println("❌ " + e.getMessage());
         } finally {
-            buffer.setLength(0); // reset buffer
+            buffer.setLength(0);
         }
     }
 }
