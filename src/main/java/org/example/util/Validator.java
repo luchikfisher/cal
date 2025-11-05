@@ -5,10 +5,7 @@ import org.example.constants.Constants;
 
 import java.util.Set;
 
-/**
- * Validator — centralized stateless validation helper.
- * Principles: DRY, SRP, ≤7 lines per method, clean constants usage.
- */
+
 @UtilityClass
 public class Validator {
 
@@ -26,6 +23,7 @@ public class Validator {
         try { Double.parseDouble(input.trim()); return true; }
         catch (NumberFormatException e) { return false; }
     }
+
 
     public boolean isValidOperator(String input) {
         return !isBlank(input) && ALLOWED_OPERATORS.contains(input.trim());
