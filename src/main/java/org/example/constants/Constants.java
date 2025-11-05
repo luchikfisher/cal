@@ -17,6 +17,12 @@ public final class Constants {
     public static final String SIN_OPERATOR = "sin";
     public static final String COS_OPERATOR = "cos";
 
+    // ===== Syntax =====
+    public static final String LEFT_PAREN = "(";
+    public static final String RIGHT_PAREN = ")";
+    public static final String ERROR_NULL_PARSER = "Parser cannot be null";
+
+
     // ===== UI / Messages =====
     public static final String PROMPT_INPUT =
             "Enter number/operator or full expression (double empty = evaluate, triple = exit):";

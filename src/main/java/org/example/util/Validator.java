@@ -1,29 +1,37 @@
 package org.example.util;
 
 import lombok.experimental.UtilityClass;
+import org.example.constants.Constants;
+
+import java.util.Set;
 
 /**
- * Validator — simple, stateless helper for token validation.
+ * Validator — centralized stateless validation helper.
+ * Principles: DRY, SRP, ≤7 lines per method, clean constants usage.
  */
 @UtilityClass
 public class Validator {
 
-    private static final String[] ALLOWED_OPERATORS = {"+", "-", "*", "/", "sin", "cos"};
+    private static final Set<String> ALLOWED_OPERATORS = Set.of(
+            Constants.PLUS_OPERATOR,
+            Constants.MINUS_OPERATOR,
+            Constants.MULTIPLY_OPERATOR,
+            Constants.DIVIDE_OPERATOR,
+            Constants.SIN_OPERATOR,
+            Constants.COS_OPERATOR
+    );
 
-    public static boolean isValidNumber(String input) {
-        if (input == null || input.isBlank()) return false;
-        try {
-            Double.parseDouble(input.trim());
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
+    public boolean isValidNumber(String input) {
+        if (isBlank(input)) return false;
+        try { Double.parseDouble(input.trim()); return true; }
+        catch (NumberFormatException e) { return false; }
     }
 
-    public static boolean isValidOperator(String input) {
-        if (input == null || input.isBlank()) return false;
-        for (String op : ALLOWED_OPERATORS)
-            if (op.equals(input.trim())) return true;
-        return false;
+    public boolean isValidOperator(String input) {
+        return !isBlank(input) && ALLOWED_OPERATORS.contains(input.trim());
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 }
