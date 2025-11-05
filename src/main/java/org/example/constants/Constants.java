@@ -1,12 +1,13 @@
 package org.example.constants;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Centralized constants for the calculator application.
  * Grouped by logical category: Operators, UI, Behavior, Utility.
  */
+@UtilityClass
 public final class Constants {
-
-    private Constants() {}
 
     // ===== Operators =====
     public static final String PLUS_OPERATOR = "+";
@@ -24,6 +25,6 @@ public final class Constants {
     public static final String EXIT_MESSAGE = "👋 Exiting calculator.";
 
     // ===== Behavior =====
-    public static final int EVAL_THRESHOLD = 2;  // two empty lines → evaluate
-    public static final int EXIT_THRESHOLD = 3;  // three empty lines → exit
+    public static final int EVAL_THRESHOLD = 1;  // two empty lines → evaluate
+    public static final int EXIT_THRESHOLD = 2;  // three empty lines → exit
 }

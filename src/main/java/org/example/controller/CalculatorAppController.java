@@ -21,12 +21,16 @@ public class CalculatorAppController {
 
         StringBuilder buffer = new StringBuilder();
         int blankCount = 0;
+        boolean running = true;
 
-        while (true) {
+        while (running) {
             System.out.print("> ");
             String line = scanner.nextLine();
+            if (line == null) {
+                running = false;
+                continue;
+            }
 
-            if (line == null) break;
             line = line.trim();
 
             if (line.isEmpty()) {
@@ -34,8 +38,9 @@ public class CalculatorAppController {
 
                 if (blankCount == Constants.EVAL_THRESHOLD) {
                     evaluateBuffer(buffer);
+                } else if (blankCount >= Constants.EXIT_THRESHOLD) {
+                    running = false;
                 }
-                if (blankCount >= Constants.EXIT_THRESHOLD) break;
 
             } else {
                 blankCount = 0;
