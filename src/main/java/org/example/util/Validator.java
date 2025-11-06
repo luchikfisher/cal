@@ -3,7 +3,9 @@ package org.example.util;
 import lombok.experimental.UtilityClass;
 import org.example.constants.Constants;
 
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * Validator — centralized stateless validation helper.
@@ -23,57 +25,78 @@ public class Validator {
 
     // ===== BASIC CHECKS =====
     public boolean isValidNumber(String input) {
-        if (isBlank(input)) return false;
-        try { Double.parseDouble(input.trim()); return true; }
-        catch (NumberFormatException e) { return false; }
+        return Optional.ofNullable(input)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> {
+                    try {
+                        Double.parseDouble(s);
+                        return true;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                })
+                .orElse(false);
     }
 
     public boolean isValidOperator(String input) {
-        return !isBlank(input) && ALLOWED_OPERATORS.contains(input.trim());
+        return Optional.ofNullable(input)
+                .map(String::trim)
+                .filter(ALLOWED_OPERATORS::contains)
+                .isPresent();
     }
 
     private boolean isBlank(String s) {
-        return s == null || s.isBlank();
+        return Optional.ofNullable(s).map(String::isBlank).orElse(true);
     }
 
     // ===== EXPRESSION VALIDATION =====
     public boolean isValidExpression(String expr) {
-        if (isBlank(expr)) return false;
-        if (startsOrEndsWithOperator(expr)) return false;
-        if (hasIllegalOperatorPairs(expr)) return false;
-        return !hasInvalidFunctions(expr);
+        return Optional.ofNullable(expr)
+                .filter(s -> !s.isBlank())
+                .filter(s -> !startsOrEndsWithOperator(s))
+                .filter(s -> !hasIllegalOperatorPairs(s))
+                .filter(s -> !hasInvalidFunctions(s))
+                .isPresent();
     }
 
     private boolean startsOrEndsWithOperator(String expr) {
+        if (expr.length() < 1) return false;
+
         String first = String.valueOf(expr.charAt(0));
         String last = String.valueOf(expr.charAt(expr.length() - 1));
-        return (isValidOperator(first) && !first.equals(Constants.PLUS_OPERATOR) && !first.equals(Constants.MINUS_OPERATOR))
-                || (isValidOperator(last));
+
+        boolean startsIllegal =
+                isValidOperator(first)
+                        && !first.equals(Constants.PLUS_OPERATOR)
+                        && !first.equals(Constants.MINUS_OPERATOR);
+
+        return startsIllegal || isValidOperator(last);
     }
 
     private boolean hasIllegalOperatorPairs(String expr) {
-        for (int i = 1; i < expr.length(); i++) {
-            char prev = expr.charAt(i - 1);
-            char curr = expr.charAt(i);
+        // שימוש ב־IntStream כדי לבדוק רצפים אסורים
+        return IntStream.range(1, expr.length())
+                .anyMatch(i -> {
+                    char prev = expr.charAt(i - 1);
+                    char curr = expr.charAt(i);
 
-            boolean bothOperators = isValidOperator(String.valueOf(prev)) &&
-                    isValidOperator(String.valueOf(curr));
-            boolean bothSigns = (prev == '+' || prev == '-') &&
-                    (curr == '+' || curr == '-');
+                    boolean bothOperators = isValidOperator(String.valueOf(prev))
+                            && isValidOperator(String.valueOf(curr));
+                    boolean bothSigns = (prev == '+' || prev == '-') &&
+                            (curr == '+' || curr == '-');
 
-            if (bothOperators && !bothSigns) return true;
-        }
-        return false;
+                    return bothOperators && !bothSigns;
+                });
     }
 
-
     private boolean hasInvalidFunctions(String expr) {
-        for (String op : ALLOWED_OPERATORS) {
-            if (Character.isLetter(op.charAt(0))) { // sin, cos, etc.
-                if (expr.contains(op) && !expr.contains(op + "(")) return true;
-                if (expr.contains(op + "()")) return true;
-            }
-        }
-        return false;
+        // שימוש ב־Stream על ALLOWED_OPERATORS במקום לולאה רגילה
+        return ALLOWED_OPERATORS.stream()
+                .filter(op -> Character.isLetter(op.charAt(0))) // רק פונקציות מילוליות (sin, cos)
+                .anyMatch(op ->
+                        (expr.contains(op) && !expr.contains(op + "(")) ||
+                                expr.contains(op + "()")
+                );
     }
 }
