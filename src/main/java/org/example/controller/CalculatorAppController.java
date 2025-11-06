@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.constants.Constants;
 import org.example.engine.CalculatorEngine;
 
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
-/**
- * Controller layer — handles user interaction with safe, predictive flow.
- */
+
 @RequiredArgsConstructor
 public class CalculatorAppController {
 
@@ -19,53 +19,66 @@ public class CalculatorAppController {
         printWelcome();
         StringBuilder buffer = new StringBuilder();
         int blankCount = 0;
-        boolean running = true;
 
-        while (running) {
+        while (blankCount < Constants.EXIT_THRESHOLD) {
             System.out.print("> ");
-            String line = scanner.nextLine().trim();
+
+            String line = Optional.ofNullable(scanner.nextLine())
+                    .map(String::trim)
+                    .orElse("");
+
             blankCount = processLine(line, buffer, blankCount);
-            running = blankCount < Constants.EXIT_THRESHOLD;
         }
+
         System.out.println(Constants.EXIT_MESSAGE);
     }
 
     private void printWelcome() {
-        System.out.println("🧮 Java Calculator (Predictive Edition)");
-        System.out.println(Constants.PROMPT_INPUT);
-        System.out.println();
+        Stream.of(
+                "🧮 Java Calculator (Predictive Edition)",
+                Constants.PROMPT_INPUT,
+                ""
+        ).forEach(System.out::println);
     }
 
     private int processLine(String line, StringBuilder buffer, int blankCount) {
-        if (line.isEmpty()) return handleBlank(buffer, blankCount + 1);
+        if (line.isEmpty()) {
+            return handleBlank(buffer, blankCount + 1);
+        }
         bufferAppend(buffer, line);
         return 0;
     }
 
     private void bufferAppend(StringBuilder buffer, String line) {
-        if (!buffer.isEmpty()) buffer.append(' ');
+        if (buffer.length() > 0) buffer.append(' ');
         buffer.append(line);
     }
 
     private int handleBlank(StringBuilder buffer, int count) {
-        if (count == Constants.EVAL_THRESHOLD) evaluate(buffer);
+        if (count == Constants.EVAL_THRESHOLD) {
+            evaluate(buffer);
+        }
         return count;
     }
 
     private void evaluate(StringBuilder buffer) {
-        if (buffer.isEmpty()) {
-            System.err.println(Constants.ERROR_EMPTY);
-            return;
-        }
-        double result = engine.evaluate(buffer.toString());
-        printResult(result, buffer);
-        buffer.setLength(0);
+        Optional.ofNullable(buffer.toString())
+                .filter(expr -> !expr.isBlank())
+                .ifPresentOrElse(
+                        expr -> {
+                            double result = engine.evaluate(expr);
+                            printResult(result, expr);
+                            buffer.setLength(0);
+                        },
+                        () -> System.err.println(Constants.ERROR_EMPTY)
+                );
     }
 
-    private void printResult(double result, StringBuilder buffer) {
-        if (Double.isNaN(result))
+    private void printResult(double result, String expression) {
+        if (Double.isNaN(result)) {
             System.err.println("⚠️ Invalid or incomplete expression.");
-        else
-            System.out.printf("%s %.4f   [%s]%n", Constants.RESULT_PREFIX, result, buffer);
+        } else {
+            System.out.printf("%s %.4f   [%s]%n", Constants.RESULT_PREFIX, result, expression);
+        }
     }
 }

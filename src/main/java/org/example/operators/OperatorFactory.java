@@ -1,5 +1,6 @@
 package org.example.operators;
 
+import lombok.experimental.UtilityClass;
 import org.example.constants.Constants;
 
 import java.util.Map;
@@ -8,9 +9,8 @@ import java.util.Map;
  * OperatorFactory — central registry providing Operator instances.
  * Enables dependency inversion and clean extension of the operator set.
  */
+@UtilityClass
 public final class OperatorFactory {
-
-    private OperatorFactory() {}
 
     public static Map<String, Operator> createDefaultRegistry() {
         return Map.ofEntries(
