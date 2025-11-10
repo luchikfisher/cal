@@ -1,19 +1,23 @@
-package org.example.controller;
+package org.example.app;
 
 import lombok.RequiredArgsConstructor;
 import org.example.constants.Constants;
-import org.example.engine.CalculatorEngine;
+import org.example.core.engine.CalculatorEngine;
+import org.example.io.InputProvider;
+import org.example.io.OutputProvider;
 
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.stream.Stream;
 
-
+/**
+ * Orchestrates user interaction using injected IO providers.
+ */
 @RequiredArgsConstructor
 public class CalculatorAppController {
 
-    private final Scanner scanner = new Scanner(System.in);
-    private final CalculatorEngine engine = new CalculatorEngine();
+    private final InputProvider input;
+    private final OutputProvider output;
+    private final CalculatorEngine engine;
 
     public void run() {
         printWelcome();
@@ -21,16 +25,14 @@ public class CalculatorAppController {
         int blankCount = 0;
 
         while (blankCount < Constants.EXIT_THRESHOLD) {
-            System.out.print("> ");
-
-            String line = Optional.ofNullable(scanner.nextLine())
+            String line = Optional.ofNullable(input.readLine())
                     .map(String::trim)
                     .orElse("");
 
             blankCount = processLine(line, buffer, blankCount);
         }
 
-        System.out.println(Constants.EXIT_MESSAGE);
+        output.println(Constants.EXIT_MESSAGE);
     }
 
     private void printWelcome() {
@@ -38,26 +40,18 @@ public class CalculatorAppController {
                 "🧮 Java Calculator (Predictive Edition)",
                 Constants.PROMPT_INPUT,
                 ""
-        ).forEach(System.out::println);
+        ).forEach(output::println);
     }
 
     private int processLine(String line, StringBuilder buffer, int blankCount) {
-        if (line.isEmpty()) {
-            return handleBlank(buffer, blankCount + 1);
-        }
-        bufferAppend(buffer, line);
+        if (line.isEmpty()) return handleBlank(buffer, blankCount + 1);
+        if (buffer.length() > 0) buffer.append(' ');
+        buffer.append(line);
         return 0;
     }
 
-    private void bufferAppend(StringBuilder buffer, String line) {
-        if (buffer.length() > 0) buffer.append(' ');
-        buffer.append(line);
-    }
-
     private int handleBlank(StringBuilder buffer, int count) {
-        if (count == Constants.EVAL_THRESHOLD) {
-            evaluate(buffer);
-        }
+        if (count == Constants.EVAL_THRESHOLD) evaluate(buffer);
         return count;
     }
 
@@ -70,15 +64,14 @@ public class CalculatorAppController {
                             printResult(result, expr);
                             buffer.setLength(0);
                         },
-                        () -> System.err.println(Constants.ERROR_EMPTY)
+                        () -> output.error(Constants.ERROR_EMPTY)
                 );
     }
 
     private void printResult(double result, String expression) {
-        if (Double.isNaN(result)) {
-            System.err.println("⚠️ Invalid or incomplete expression.");
-        } else {
-            System.out.printf("%s %.4f   [%s]%n", Constants.RESULT_PREFIX, result, expression);
-        }
+        if (Double.isNaN(result))
+            output.error("⚠️ Invalid or incomplete expression.");
+        else
+            output.println(String.format("%s %.4f   [%s]", Constants.RESULT_PREFIX, result, expression));
     }
 }

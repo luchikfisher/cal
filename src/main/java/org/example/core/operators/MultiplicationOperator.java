@@ -1,4 +1,4 @@
-package org.example.operators;
+package org.example.core.operators;
 
 public class MultiplicationOperator implements Operator {
     @Override public String getSymbol() { return "*"; }

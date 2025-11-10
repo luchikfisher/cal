@@ -1,33 +1,42 @@
-package org.example.parser;
+package org.example.core.parser;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.constants.Constants;
-import org.example.operators.Operator;
+import org.example.core.operators.Operator;
 import org.example.util.Validator;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * ExpressionParser — predictive, robust tokenization & RPN conversion.
- * Uses Optional for safe null-handling and Stream API where relevant.
+ * DefaultExpressionParser — current robust predictive parser implementation.
  */
 @RequiredArgsConstructor
-public class ExpressionParser {
+public class DefaultExpressionParser implements ExpressionParser {
 
+    @Getter
     private final Map<String, Operator> registry;
+    private final Validator validator;
 
+    @Override
     public List<String> parseExpression(String input) {
         return Optional.ofNullable(input)
                 .map(String::trim)
                 .filter(expr -> !expr.isEmpty())
                 .map(expr -> expr.replaceAll("\\s+", ""))
-                .filter(Validator::isValidExpression)
+                .filter(validator::isValidExpression)
                 .filter(this::isBalanced)
                 .map(this::tokenize)
                 .orElse(List.of());
     }
 
+    @Override
+    public Optional<Operator> findOperator(String symbol) {
+        return Optional.ofNullable(registry.get(symbol));
+    }
+
+    // ===== existing logic preserved below =====
     private boolean isBalanced(String expr) {
         int depth = 0;
         for (char c : expr.toCharArray()) {
@@ -62,14 +71,12 @@ public class ExpressionParser {
         if (c == Constants.LEFT_PAREN.charAt(0) || c == Constants.RIGHT_PAREN.charAt(0))
             return addToken(tokens, s, i);
         if (Character.isDigit(c) || isUnary(tokens)) return readSignedTerm(expr, tokens, i);
-        if (Validator.isValidOperator(s)) return addToken(tokens, s, i);
+        if (validator.isValidOperator(s)) return addToken(tokens, s, i);
         return i + 1;
     }
 
     private boolean isRecognizedCharacter(char c) {
-        return Character.isLetterOrDigit(c)
-                || "+-*/().".indexOf(c) >= 0
-                || Character.isWhitespace(c);
+        return Character.isLetterOrDigit(c) || "+-*/().".indexOf(c) >= 0;
     }
 
     private int addToken(List<String> tokens, String token, int i) {
@@ -79,22 +86,19 @@ public class ExpressionParser {
 
     private void insertImplicitMultiplication(List<String> tokens) {
         if (tokens.size() < 2) return;
-
         String prev = tokens.get(tokens.size() - 2);
         String last = tokens.get(tokens.size() - 1);
-
-        boolean prevVal = Validator.isValidNumber(prev) || Constants.RIGHT_PAREN.equals(prev);
-        boolean lastVal = Validator.isValidNumber(last)
+        boolean prevVal = validator.isValidNumber(prev) || Constants.RIGHT_PAREN.equals(prev);
+        boolean lastVal = validator.isValidNumber(last)
                 || Character.isLetter(last.charAt(0))
                 || Constants.LEFT_PAREN.equals(last);
-
         if (prevVal && lastVal) tokens.add(tokens.size() - 1, Constants.MULTIPLY_OPERATOR);
     }
 
     private boolean isUnary(List<String> tokens) {
         return tokens.isEmpty()
                 || Optional.of(tokens.get(tokens.size() - 1))
-                .filter(t -> Validator.isValidOperator(t) || Constants.LEFT_PAREN.equals(t))
+                .filter(t -> validator.isValidOperator(t) || Constants.LEFT_PAREN.equals(t))
                 .isPresent();
     }
 
@@ -102,7 +106,7 @@ public class ExpressionParser {
         int j = i;
         while (j < expr.length() && Character.isLetter(expr.charAt(j))) j++;
         String func = expr.substring(i, j);
-        if (!Validator.isValidOperator(func)) {
+        if (!validator.isValidOperator(func)) {
             System.err.println("❌ Invalid function: " + func);
             return -1;
         }
@@ -128,7 +132,6 @@ public class ExpressionParser {
         int start = j;
         while (j < expr.length() && (Character.isDigit(expr.charAt(j)) || expr.charAt(j) == '.')) j++;
         if (start == j) return j;
-
         String numStr = expr.substring(start, j);
         try {
             double num = Double.parseDouble(numStr) * sign;
@@ -143,16 +146,13 @@ public class ExpressionParser {
     private List<String> toRPN(List<String> tokens) {
         List<String> output = new ArrayList<>();
         Deque<Object> stack = new ArrayDeque<>();
-
-        // שימוש ב־forEach עם Lambda במקום לולאה רגילה
         tokens.forEach(token -> processToken(token, output, stack));
-
         flushStack(stack, output);
         return output;
     }
 
     private void processToken(String token, List<String> out, Deque<Object> stack) {
-        if (Validator.isValidNumber(token)) {
+        if (validator.isValidNumber(token)) {
             out.add(token);
             return;
         }
@@ -187,7 +187,6 @@ public class ExpressionParser {
     }
 
     private void flushStack(Deque<Object> stack, List<String> out) {
-        // שימוש ב־Stream API לניקוי הערמה
         out.addAll(stack.stream()
                 .filter(Operator.class::isInstance)
                 .map(op -> ((Operator) op).getSymbol())
@@ -195,7 +194,4 @@ public class ExpressionParser {
         stack.clear();
     }
 
-    public Operator getOperator(String symbol) {
-        return registry.get(symbol);
-    }
 }

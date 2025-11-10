@@ -1,48 +1,36 @@
-package org.example.engine;
+package org.example.core.strategy;
 
 import lombok.RequiredArgsConstructor;
-import org.example.operators.Operator;
-import org.example.parser.ExpressionParser;
-import org.example.operators.OperatorFactory;
+import org.example.core.operators.Operator;
+import org.example.core.parser.DefaultExpressionParser;
 import org.example.util.Validator;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
- * Core evaluation logic — fully guard-based, never throws exceptions.
+ * StandardCalculationStrategy — default algorithm for RPN evaluation.
  */
 @RequiredArgsConstructor
-public class CalculatorEngine {
+public class StandardCalculationStrategy implements CalculationStrategy {
 
-    private final ExpressionParser parser = new ExpressionParser(OperatorFactory.createDefaultRegistry());
+    private final DefaultExpressionParser parser;
+    private final Validator validator;
 
-    public double evaluate(String input) {
-        return Optional.ofNullable(input)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(parser::parseExpression)
-                .map(this::compute)
-                .orElse(Double.NaN);
-    }
-
-    private double compute(List<String> rpn) {
+    @Override
+    public double compute(List<String> rpn, Deque<Double> stack) {
         if (rpn == null || rpn.isEmpty()) return Double.NaN;
 
-        Deque<Double> stack = new ArrayDeque<>();
-        // Stream API במקום לולאה רגילה
         rpn.forEach(token -> processToken(stack, token));
-
         return finalizeResult(stack);
     }
 
     private void processToken(Deque<Double> stack, String token) {
-        if (Validator.isValidNumber(token)) {
+        if (validator.isValidNumber(token)) {
             stack.push(Double.parseDouble(token));
             return;
         }
 
-        Optional.ofNullable(parser.getOperator(token))
+        parser.findOperator(token)
                 .ifPresent(op -> {
                     double[] args = popOperands(stack, op.getOperandCount());
                     stack.push(applySafe(op, args));
@@ -51,9 +39,9 @@ public class CalculatorEngine {
 
     private double[] popOperands(Deque<Double> stack, int count) {
         double[] args = new double[count];
-        // שימוש תקין ב־Stream אינדקסי יורד לשמירה על סדר חישוב נכון
-        IntStream.iterate(count - 1, i -> i >= 0, i -> i - 1)
-                .forEach(i -> args[i] = stack.isEmpty() ? 0.0 : stack.pop());
+        for (int i = count - 1; i >= 0; i--) {
+            args[i] = stack.isEmpty() ? 0.0 : stack.pop();
+        }
         return args;
     }
 

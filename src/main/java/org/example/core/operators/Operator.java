@@ -1,4 +1,4 @@
-package org.example.operators;
+package org.example.core.operators;
 
 public interface Operator {
     String getSymbol();
