@@ -1,5 +1,6 @@
-package org.example.app;
+package org.example;
 
+import org.example.app.CalculatorAppController;
 import org.example.core.builder.CalculatorBuilder;
 import org.example.core.engine.CalculatorEngine;
 import org.example.io.ConsoleInputProvider;

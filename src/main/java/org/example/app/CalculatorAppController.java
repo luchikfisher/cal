@@ -1,7 +1,7 @@
 package org.example.app;
 
 import lombok.RequiredArgsConstructor;
-import org.example.constants.Constants;
+import org.example.util.Constants;
 import org.example.core.engine.CalculatorEngine;
 import org.example.io.InputProvider;
 import org.example.io.OutputProvider;
