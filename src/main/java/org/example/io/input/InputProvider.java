@@ -1,4 +1,4 @@
-package org.example.io;
+package org.example.io.input;
 
 /**
  * Defines the contract for any input source.

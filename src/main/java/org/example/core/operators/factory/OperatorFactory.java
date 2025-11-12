@@ -1,7 +1,9 @@
-package org.example.core.operators;
+package org.example.core.operators.factory;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.example.core.operators.base.Operator;
+import org.example.core.operators.math.*;
 import org.example.util.Constants;
 
 import java.util.Collections;
@@ -17,16 +19,16 @@ import java.util.Optional;
 public final class OperatorFactory {
 
     // ===== SINGLETON INSTANCE =====
-    private static final Map<String, Operator> REGISTRY = new HashMap<>();
+    private static final Map<String, Operator> registry = new HashMap<>();
 
     static {
         // ===== DEFAULT OPERATORS =====
-        register(Constants.PLUS_OPERATOR, new AdditionOperator());
-        register(Constants.MINUS_OPERATOR, new SubtractionOperator());
-        register(Constants.MULTIPLY_OPERATOR, new MultiplicationOperator());
-        register(Constants.DIVIDE_OPERATOR, new DivisionOperator());
-        register(Constants.SIN_OPERATOR, new SinOperator());
-        register(Constants.COS_OPERATOR, new CosOperator());
+        addOperator(Constants.PLUS_OPERATOR, new AdditionOperator());
+        addOperator(Constants.MINUS_OPERATOR, new SubtractionOperator());
+        addOperator(Constants.MULTIPLY_OPERATOR, new MultiplicationOperator());
+        addOperator(Constants.DIVIDE_OPERATOR, new DivisionOperator());
+        addOperator(Constants.SIN_OPERATOR, new SinOperator());
+        addOperator(Constants.COS_OPERATOR, new CosOperator());
     }
 
     // ===== PUBLIC API =====
@@ -35,30 +37,23 @@ public final class OperatorFactory {
      * Registers a new Operator at runtime.
      * If the symbol already exists, it will be replaced.
      */
-    public static void register(String symbol, Operator operator) {
+    public static void addOperator(String symbol, Operator operator) {
         if (symbol == null || operator == null)
             throw new IllegalArgumentException("Symbol and operator must not be null");
-        REGISTRY.put(symbol, operator);
+        registry.put(symbol, operator);
     }
 
     /**
      * Returns an Operator by symbol, wrapped in Optional.
      */
     public static Optional<Operator> get(String symbol) {
-        return Optional.ofNullable(REGISTRY.get(symbol));
+        return Optional.ofNullable(registry.get(symbol));
     }
 
     /**
      * Returns an unmodifiable view of the full operator registry.
      */
     public static Map<String, Operator> getRegistry() {
-        return Collections.unmodifiableMap(REGISTRY);
-    }
-
-    /**
-     * Clears all registered operators (used mainly for testing).
-     */
-    public static void clear() {
-        REGISTRY.clear();
+        return Collections.unmodifiableMap(registry);
     }
 }

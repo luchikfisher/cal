@@ -1,6 +1,7 @@
 package org.example.core.engine;
 
 import lombok.RequiredArgsConstructor;
+import org.example.core.parser.RpnConverter;
 import org.example.core.parser.ExpressionParser;
 import org.example.core.strategy.CalculationStrategy;
 
@@ -10,16 +11,17 @@ import java.util.*;
  * CalculatorEngine — clean, safe, Java 11 compatible evaluation logic.
  */
 @RequiredArgsConstructor
-public class CalculatorEngine {
+public class CalculatorEngine implements Engine {
 
     private final ExpressionParser parser;
     private final CalculationStrategy strategy;
+    private final RpnConverter rpnConverter;
 
     public double evaluate(String input) {
         return Optional.ofNullable(input)
-                .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .map(parser::parseExpression)
+                .map(rpnConverter::toRpn)
                 .map(this::compute)
                 .orElse(Double.NaN);
     }
