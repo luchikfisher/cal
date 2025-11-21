@@ -5,12 +5,12 @@ package org.example.io.output;
  */
 public class ConsoleOutputProvider implements OutputProvider {
     @Override
-    public void println(String message) {
+    public void write(String message) {
         System.out.println(message);
     }
 
     @Override
-    public void error(String message) {
+    public void displayError(String message) {
         System.err.println(message);
     }
 }

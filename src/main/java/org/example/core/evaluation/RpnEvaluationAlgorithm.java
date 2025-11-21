@@ -1,42 +1,40 @@
-package org.example.core.strategy;
+package org.example.core.evaluation;
 
 import lombok.RequiredArgsConstructor;
 import org.example.core.operators.base.BinaryOperator;
 import org.example.core.operators.base.Operator;
 import org.example.core.operators.base.UnaryOperator;
 import org.example.core.operators.factory.OperatorFactory;
-import org.example.core.validation.Validator;
 
-import java.util.*;
+import java.util.Deque;
 
-/**
- * RpnCalculationStrategy — pure RPN evaluation logic (no I/O or try/catch).
- */
 @RequiredArgsConstructor
-public class RpnCalculationStrategy implements CalculationStrategy {
-
-    private final Validator validator;
+public class RpnEvaluationAlgorithm implements EvaluationAlgorithm {
 
     @Override
-    public double compute(List<String> rpn, Deque<Double> stack) {
-        if (rpn == null || rpn.isEmpty()) return Double.NaN;
+    public double execute(TokenIterator tokens, Deque<Double> stack) {
+        if (tokens == null || !tokens.hasNext()) return Double.NaN;
 
-        for (String token : rpn) {
-            processToken(stack, token);
+        while (tokens.hasNext()) {
+            processToken(stack, tokens.next());
         }
+
         return finalizeResult(stack);
     }
 
     private void processToken(Deque<Double> stack, String token) {
-        if (validator.isValidNumber(token)) {
-            stack.push(Double.parseDouble(token));
+        if (OperatorFactory.getRegistry().containsKey(token)) {
+            Operator op = OperatorFactory.getRegistry().get(token);
+            double[] args = popOperands(stack, op.getOperandCount());
+            stack.push(applyOperator(op, args));
             return;
         }
 
-        OperatorFactory.get(token).ifPresent(op -> {
-            double[] args = popOperands(stack, op.getOperandCount());
-            stack.push(applyOperator(op, args));
-        });
+        try {
+            stack.push(Double.parseDouble(token));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid token in RPN: " + token);
+        }
     }
 
     private double[] popOperands(Deque<Double> stack, int count) {

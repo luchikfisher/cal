@@ -1,10 +1,10 @@
-package org.example.core.operators.math;
+package org.example.core.operators.impl;
 
 import org.example.core.operators.base.BinaryOperator;
 
-public class SubtractionOperator implements BinaryOperator {
+public class DivisionOperator implements BinaryOperator {
     @Override
-    public String getSymbol() { return "-"; }
+    public String getSymbol() { return "/"; }
 
     @Override
     public int getPrecedence() { return 2; }
@@ -17,6 +17,6 @@ public class SubtractionOperator implements BinaryOperator {
 
     @Override
     public double apply(double left, double right) {
-        return left - right;
+        return left / right;
     }
 }

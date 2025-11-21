@@ -1,13 +1,13 @@
-package org.example.core.operators.math;
+package org.example.core.operators.impl;
 
 import org.example.core.operators.base.BinaryOperator;
 
-public class MultiplicationOperator implements BinaryOperator {
+public class AdditionOperator implements BinaryOperator {
     @Override
-    public String getSymbol() { return "*"; }
+    public String getSymbol() { return "+"; }
 
     @Override
-    public int getPrecedence() { return 3; }
+    public int getPrecedence() { return 1; }
 
     @Override
     public boolean isLeftAssociative() { return true; }
@@ -17,6 +17,6 @@ public class MultiplicationOperator implements BinaryOperator {
 
     @Override
     public double apply(double left, double right) {
-        return left * right;
+        return left + right;
     }
 }

@@ -1,13 +1,13 @@
-package org.example.core.operators.math;
+package org.example.core.operators.impl;
 
 import org.example.core.operators.base.UnaryOperator;
 
-public class CosOperator implements UnaryOperator {
+public class SinOperator implements UnaryOperator {
     @Override
-    public String getSymbol() { return "cos"; }
+    public String getSymbol() { return "sin"; }
 
     @Override
-    public int getPrecedence() { return 4; }
+    public int getPrecedence() { return 3; }
 
     @Override
     public boolean isLeftAssociative() { return false; }
@@ -17,6 +17,6 @@ public class CosOperator implements UnaryOperator {
 
     @Override
     public double apply(double operand) {
-        return Math.cos(operand);
+        return Math.sin(operand);
     }
 }
