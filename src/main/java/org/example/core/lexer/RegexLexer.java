@@ -5,7 +5,6 @@ import org.example.core.exception.LexicalException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,7 +69,6 @@ public final class RegexLexer implements Lexer {
             tokens.add(token);
             last = token;
         }
-        System.out.println("TOKEN: " + tokens);
         return tokens;
     }
 
@@ -95,7 +93,30 @@ public final class RegexLexer implements Lexer {
     // ==========================
 
     private String applyUnary(String token, String last) {
-        return token; // no unary here
+        if (!"+".equals(token) && !"-".equals(token)) {
+            return token;
+        }
+
+        if (isUnaryContext(last)) {
+            return "+".equals(token) ? "u+" : "u-";
+        }
+
+        return token;
+    }
+
+    private boolean isUnaryContext(String last) {
+        return last == null
+                || LEFT_PAREN.equals(last)
+                || isOperator(last)
+                || isUnary(last);
+    }
+
+    private boolean isOperator(String token) {
+        return token != null && OPERATORS.contains(token);
+    }
+
+    private boolean isUnary(String token) {
+        return "u-".equals(token) || "u+".equals(token);
     }
     // ==========================
     //   IMPLICIT MULTIPLICATION
