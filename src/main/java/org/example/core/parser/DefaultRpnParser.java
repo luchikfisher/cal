@@ -1,6 +1,7 @@
 package org.example.core.parser;
 
 import lombok.RequiredArgsConstructor;
+import org.example.config.ConfigurationManager;
 import org.example.config.OperatorConfig;
 import org.example.core.operators.base.Operator;
 import org.example.core.operators.factory.OperatorFactory;
