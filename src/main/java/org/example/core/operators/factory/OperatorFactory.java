@@ -43,7 +43,13 @@ public final class OperatorFactory {
         if (Objects.isNull(symbol) || Objects.isNull(operator)) {
             throw new IllegalArgumentException("Symbol and operator must not be null");
         }
-        registry.put(symbol, operator);
+        Operator existing = registry.putIfAbsent(symbol, operator);
+        if (Objects.nonNull(existing)) {
+            throw new IllegalStateException(
+                    "Operator already registered for symbol: " + symbol + " ("
+                            + existing.getClass().getSimpleName() + ")"
+            );
+        }
     }
 
     public static Set<String> getBinaryOperators() {

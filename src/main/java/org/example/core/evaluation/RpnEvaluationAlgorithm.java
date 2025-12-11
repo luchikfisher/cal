@@ -25,13 +25,14 @@ public class RpnEvaluationAlgorithm implements EvaluationAlgorithm {
     }
 
     private void processToken(Deque<Double> stack, String token) {
-        if (OperatorFactory.getRegistry().containsKey(token)) {
-            Operator op = OperatorFactory.getRegistry().get(token);
-            double[] args = popOperands(stack, op.getOperandCount());
-            stack.push(applyOperator(op, args));
-            return;
-        }
+        OperatorFactory.get(token)
+                .ifPresentOrElse(op -> {
+                    double[] args = popOperands(stack, op.getOperandCount());
+                    stack.push(applyOperator(op, args));
+                }, () -> pushNumber(stack, token));
+    }
 
+    private void pushNumber(Deque<Double> stack, String token) {
         try {
             stack.push(Double.parseDouble(token));
         } catch (NumberFormatException e) {
