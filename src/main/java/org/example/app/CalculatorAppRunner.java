@@ -6,9 +6,9 @@ import org.example.config.CalculatorConfig;
 import org.example.config.OperatorConfig;
 import org.example.core.evaluation.CalculatorEngine;
 import org.example.core.validation.ExpressionValidator;
-import org.example.core.validation.ValidationResult;
 import org.example.io.input.InputProvider;
 import org.example.io.output.OutputProvider;
+import org.example.core.exception.EvaluationException;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -32,8 +32,8 @@ public final class CalculatorAppRunner {
 
         while (blankCount < exitThreshold) {
             String line = Optional.ofNullable(input.fetchInput())
-                    .map(String::strip)
-                    .orElse("");
+                    .orElse("")
+                    .trim();
 
             blankCount = handleInputLine(line, buffer, blankCount, evalThreshold);
         }
@@ -52,14 +52,21 @@ public final class CalculatorAppRunner {
     }
 
     private int handleInputLine(String line, StringBuilder buffer, int blankCount, int evalThreshold) {
+
         if (line.isBlank()) {
             return handleEvaluationTrigger(buffer, blankCount + 1, evalThreshold);
-        }
 
-        if (buffer.length() > 0) buffer.append(' ');
-        buffer.append(line);
-        return 0;
+        } else if (buffer.length() > 0) {
+            buffer.append(' ');
+            buffer.append(line);
+            return 0;
+
+        } else {
+            buffer.append(line);
+            return 0;
+        }
     }
+
 
     private int handleEvaluationTrigger(StringBuilder buffer, int count, int evalThreshold) {
         if (count == evalThreshold) {
@@ -71,23 +78,28 @@ public final class CalculatorAppRunner {
     }
 
     private void processExpression(String expr) {
-        ValidationResult result = validator.validate(expr);
-        if (!result.isValid()) {
-            output.displayError(result.getMessage().orElse("Invalid expression"));
+        boolean valid = validator.validate(expr);
+
+        if (!valid) {
+            output.displayError("Invalid expression");
             return;
         }
 
         evaluateAndDisplay(expr);
     }
 
+
     private void evaluateAndDisplay(String expr) {
         try {
             double value = engine.evaluate(expr);
             handleResult(value, expr);
+
         } catch (ArithmeticException e) {
             output.displayError("[MATH] " + e.getMessage());
-        } catch (IllegalArgumentException e) {
+
+        } catch (EvaluationException e) {
             output.displayError("[EVAL] " + e.getMessage());
+
         } catch (Exception e) {
             output.displayError("[UNEXPECTED] " + e.getMessage());
         }

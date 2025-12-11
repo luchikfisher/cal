@@ -1,10 +1,10 @@
 package org.example.core.parser;
 
-
 import lombok.RequiredArgsConstructor;
 import org.example.config.OperatorConfig;
 import org.example.core.operators.base.Operator;
 import org.example.core.operators.factory.OperatorFactory;
+
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -20,17 +20,46 @@ public class DefaultRpnParser implements RpnParser {
         List<String> output = new ArrayList<>();
         Deque<String> stack = new ArrayDeque<>();
 
-        tokens.forEach(token -> handleToken(token, output, stack));
+        String prev = null;
+
+        for (String token : tokens) {
+            token = detectUnary(token, prev);
+            handleToken(token, output, stack);
+            prev = token;
+        }
 
         drainStack(stack, output);
         return output;
     }
 
+    // -------------------------
+    // UNARY DETECTION (core fix)
+    // -------------------------
+    private String detectUnary(String token, String prev) {
+        if (!token.equals("+") && !token.equals("-")) return token;
+
+        boolean unary =
+                prev == null                          // start of expression
+                        || OperatorFactory.getRegistry().containsKey(prev) // previous was operator
+                        || prev.equals("(");                  // ( +10 )
+
+        if (unary) {
+            return token.equals("+") ? "u+" : "u-";
+        }
+
+        return token;
+    }
+
+    // -------------------------
+    // TOKEN HANDLING
+    // -------------------------
     private void handleToken(String token, List<String> output, Deque<String> stack) {
+
         if (LEFT_PAREN.equals(token)) {
             stack.push(token);
             return;
         }
+
         if (RIGHT_PAREN.equals(token)) {
             drainUntilLeftParen(stack, output);
             return;
@@ -40,6 +69,7 @@ public class DefaultRpnParser implements RpnParser {
         if (opOpt.isPresent()) {
             Operator op = opOpt.get();
 
+            // unary operator?
             if (op.getOperandCount() == 1) {
                 stack.push(op.getSymbol());
                 return;
@@ -48,10 +78,10 @@ public class DefaultRpnParser implements RpnParser {
             pushOperatorWithPrecedence(op, stack, output);
             return;
         }
+
+        // number
         output.add(token);
     }
-
-
 
     private void pushOperatorWithPrecedence(Operator op, Deque<String> stack, List<String> output) {
         while (!stack.isEmpty()) {
@@ -77,12 +107,11 @@ public class DefaultRpnParser implements RpnParser {
             output.add(stack.pop());
         }
 
-        // remove '(' safely
         if (!stack.isEmpty() && LEFT_PAREN.equals(stack.peek())) {
             stack.pop();
         }
 
-        // Handle function on top of stack
+        // if function on top → output it
         if (!stack.isEmpty()) {
             Optional<Operator> topOp = OperatorFactory.get(stack.peek());
             if (topOp.isPresent() && topOp.get().getOperandCount() == 1) {
@@ -90,7 +119,6 @@ public class DefaultRpnParser implements RpnParser {
             }
         }
     }
-
 
     private void drainStack(Deque<String> stack, List<String> output) {
         while (!stack.isEmpty()) {

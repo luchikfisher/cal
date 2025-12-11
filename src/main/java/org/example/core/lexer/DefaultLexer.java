@@ -6,6 +6,8 @@ import org.example.core.exception.LexicalException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * DefaultLexer — converts a mathematical expression into lexical tokens.
@@ -21,20 +23,27 @@ public class DefaultLexer implements Lexer {
 
     @Override
     public List<String> tokenize(String expr) {
-
-        String normalized = normalizeInput(expr);
-        if (normalized == null) {
-            return List.of(); // empty expression → empty tokens
-        }
-
-        List<String> tokens = scanTokens(normalized);
-        return List.copyOf(tokens); // defensive copy
+        return normalizeInput(expr)
+                .map(this::scanTokens)
+                .map(List::copyOf)
+                .orElseGet(List::of);
     }
 
-    private String normalizeInput(String expr) {
-        if (expr == null) return null;
+    /**
+     * Normalizes the input by removing whitespace and converting blank results to Optional.empty().
+     * No null values are ever returned.
+     */
+    private Optional<String> normalizeInput(String expr) {
+
+        if (Objects.isNull(expr)) {
+            return Optional.empty();
+        }
+
         String normalized = expr.replaceAll(WHITESPACE_PATTERN, "");
-        return normalized.isBlank() ? null : normalized;
+
+        return normalized.isBlank()
+                ? Optional.empty()
+                : Optional.of(normalized);
     }
 
     private List<String> scanTokens(String expr) {
@@ -43,10 +52,12 @@ public class DefaultLexer implements Lexer {
         for (int i = 0; i < expr.length();) {
             int prevSize = tokens.size();
             i = processNextChar(expr, tokens, i);
+
             if (tokens.size() > prevSize) {
                 insertImplicitMultiplication(tokens);
             }
         }
+
         return tokens;
     }
 
@@ -57,10 +68,23 @@ public class DefaultLexer implements Lexer {
             throw new LexicalException("Unexpected character in expression: " + c);
         }
 
-        if (Character.isLetter(c)) return reader.readFunctionName(expr, tokens, i);
-        if (isParenthesis(c)) { tokens.add(String.valueOf(c)); return i + 1; }
-        if (Character.isDigit(c) || isUnarySignContext(tokens)) return reader.readSignedFactor(expr, tokens, i);
-        if (isOperatorChar(c)) { tokens.add(String.valueOf(c)); return i + 1; }
+        if (Character.isLetter(c)) {
+            return reader.readFunctionName(expr, tokens, i);
+        }
+
+        if (isParenthesis(c)) {
+            tokens.add(String.valueOf(c));
+            return i + 1;
+        }
+
+        if (Character.isDigit(c) || isUnarySignContext(tokens)) {
+            return reader.readSignedFactor(expr, tokens, i);
+        }
+
+        if (isOperatorChar(c)) {
+            tokens.add(String.valueOf(c));
+            return i + 1;
+        }
 
         return i + 1;
     }
@@ -81,39 +105,45 @@ public class DefaultLexer implements Lexer {
     }
 
     private boolean isUnarySignContext(List<String> tokens) {
-        if (tokens.isEmpty()) return true;
+        if (tokens.isEmpty()) {
+            return true;
+        }
+
         String last = tokens.get(tokens.size() - 1);
+
         return isOperatorChar(last.charAt(0))
                 || last.equals(String.valueOf(OperatorConfig.leftParen()));
     }
 
     private void insertImplicitMultiplication(List<String> tokens) {
-        if (tokens.size() < 2) return;
+        if (tokens.size() < 2) {
+            return;
+        }
 
         String prev = tokens.get(tokens.size() - 2);
         String last = tokens.get(tokens.size() - 1);
 
-        // Ignore if last token is already an operator or multiplication
+        // ignore explicit operator cases
         if (isOperatorChar(last.charAt(0)) || last.equals(OperatorConfig.multiplyOperator())) {
             return;
         }
 
-        // Cases that should not trigger implicit multiplication
-        if (prev.equals(String.valueOf(OperatorConfig.leftParen())) ||
-                last.equals(String.valueOf(OperatorConfig.rightParen()))) {
+        // ignore parentheses that shouldn't trigger implicit multiplication
+        if (prev.equals(String.valueOf(OperatorConfig.leftParen()))
+                || last.equals(String.valueOf(OperatorConfig.rightParen()))) {
             return;
         }
 
-        // Define what counts as a "value-like" token
-        boolean prevIsValue = Character.isDigit(prev.charAt(0))
-                || Character.isLetter(prev.charAt(0))
-                || prev.equals(String.valueOf(OperatorConfig.rightParen()));
+        boolean prevIsValue =
+                Character.isDigit(prev.charAt(0))
+                        || Character.isLetter(prev.charAt(0))
+                        || prev.equals(String.valueOf(OperatorConfig.rightParen()));
 
-        boolean lastIsValue = Character.isLetter(last.charAt(0))
-                || Character.isDigit(last.charAt(0))
-                || last.equals(String.valueOf(OperatorConfig.leftParen()));
+        boolean lastIsValue =
+                Character.isLetter(last.charAt(0))
+                        || Character.isDigit(last.charAt(0))
+                        || last.equals(String.valueOf(OperatorConfig.leftParen()));
 
-        // Insert implicit multiplication: e.g., 2(3), (2)(3), 2sin(x)
         if (prevIsValue && lastIsValue) {
             tokens.add(tokens.size() - 1, OperatorConfig.multiplyOperator());
         }

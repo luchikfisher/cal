@@ -15,16 +15,7 @@ public class CalculatorEngine implements EvaluationEngine {
 
     @Override
     public double evaluate(String input) {
-
-        List<String> tokens = expressionParser.parse(input);
-
-        List<String> rpnTokens = rpnConverter.toRpn(tokens);
-
-        return compute(rpnTokens);
-    }
-
-
-    private double compute(List<String> rpnTokens) {
+        List<String> rpnTokens = rpnConverter.toRpn(expressionParser.parse(input));
         Deque<Double> stack = new ArrayDeque<>();
         return evaluationAlgorithm.execute(new TokenIterator(rpnTokens), stack);
     }

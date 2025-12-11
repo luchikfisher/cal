@@ -1,24 +1,25 @@
 package org.example.config;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Optional;
 
-
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ConfigurationManager {
 
     private static final String CONFIG_FILE = "/application.properties";
     private static final Properties properties = new Properties();
 
     static {
+        loadConfiguration();
+    }
+
+    private static void loadConfiguration() {
         try (InputStream input = ConfigurationManager.class.getResourceAsStream(CONFIG_FILE)) {
-            if (input == null) {
-                throw new IllegalStateException("Config file not found: " + CONFIG_FILE);
+            if (Objects.isNull(input)) {
+                throw new FileNotFoundException("Config file not found: " + CONFIG_FILE);
             }
             properties.load(input);
         } catch (IOException e) {

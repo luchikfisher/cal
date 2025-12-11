@@ -19,4 +19,10 @@ public class SinOperator implements UnaryOperator {
     public double apply(double operand) {
         return Math.sin(operand);
     }
+
+    @Override
+    public boolean isFunction() {
+        return true;
+    }
+
 }

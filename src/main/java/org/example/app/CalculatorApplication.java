@@ -2,9 +2,8 @@ package org.example.app;
 
 import org.example.core.evaluation.CalculatorEngine;
 import org.example.core.evaluation.RpnEvaluationAlgorithm;
-import org.example.core.lexer.DefaultLexer;
 import org.example.core.lexer.Lexer;
-import org.example.core.lexer.LexicalReader;
+import org.example.core.lexer.RegexLexer;
 import org.example.core.parser.DefaultRpnParser;
 import org.example.core.parser.ExpressionParser;
 import org.example.core.parser.InfixExpressionParser;
@@ -26,10 +25,9 @@ public final class CalculatorApplication {
     public static void main(String[] args) {
 
         // ===== Core Layer =====
-        ExpressionValidator validator = new DefaultExpressionValidator();
 
-        LexicalReader reader = new LexicalReader();
-        Lexer lexer = new DefaultLexer(reader);
+        Lexer lexer = new RegexLexer();
+        ExpressionValidator validator = new DefaultExpressionValidator(lexer);
         RpnParser rpnParser = new DefaultRpnParser();
         ExpressionParser parser = new InfixExpressionParser(lexer);
 

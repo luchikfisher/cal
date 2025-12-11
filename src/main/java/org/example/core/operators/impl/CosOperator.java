@@ -19,4 +19,9 @@ public class CosOperator implements UnaryOperator {
     public double apply(double operand) {
         return Math.cos(operand);
     }
+
+    @Override
+    public boolean isFunction() {
+        return true;
+    }
 }

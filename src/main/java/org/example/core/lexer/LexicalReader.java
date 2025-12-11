@@ -2,17 +2,13 @@ package org.example.core.lexer;
 
 import org.example.config.OperatorConfig;
 import java.util.List;
+import java.util.regex.Pattern;
 
-/**
- * LexicalReader — responsible only for reading raw tokens from a character stream.
- * No semantic validation is done here.
- *
- * NOTE: Updated to correctly tokenize unary minus via "u-" token,
- *       instead of merging sign with the number (e.g. "-3").
- */
-final class LexicalReader {
+public final class LexicalReader {
 
-    int readFunctionName(String expr, List<String> tokens, int i) {
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+(\\.\\d+)?");
+
+    public int readFunctionName(String expr, List<String> tokens, int i) {
         int j = i;
         while (j < expr.length() && Character.isLetter(expr.charAt(j))) {
             j++;
@@ -21,7 +17,7 @@ final class LexicalReader {
         return j;
     }
 
-    int readSignedFactor(String expr, List<String> tokens, int i) {
+    public int readSignedFactor(String expr, List<String> tokens, int i) {
 
         int j = i;
 

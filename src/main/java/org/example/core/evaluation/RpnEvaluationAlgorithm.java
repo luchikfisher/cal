@@ -1,6 +1,8 @@
 package org.example.core.evaluation;
 
 import lombok.RequiredArgsConstructor;
+import org.example.core.exception.EvaluationException;
+import org.example.core.exception.UnknownOperatorException;
 import org.example.core.operators.base.BinaryOperator;
 import org.example.core.operators.base.Operator;
 import org.example.core.operators.base.UnaryOperator;
@@ -19,7 +21,7 @@ public class RpnEvaluationAlgorithm implements EvaluationAlgorithm {
             processToken(stack, tokens.next());
         }
 
-        return finalizeResult(stack);
+        return stack.isEmpty() ? Double.NaN : stack.peek();
     }
 
     private void processToken(Deque<Double> stack, String token) {
@@ -33,13 +35,13 @@ public class RpnEvaluationAlgorithm implements EvaluationAlgorithm {
         try {
             stack.push(Double.parseDouble(token));
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid token in RPN: " + token);
+            throw new EvaluationException("Invalid token in RPN: " + token);
         }
     }
 
     private double[] popOperands(Deque<Double> stack, int count) {
         if (stack.size() < count) {
-            throw new IllegalStateException("Insufficient operands for operator");
+            throw new EvaluationException("Insufficient operands for operator");
         }
         double[] args = new double[count];
         for (int i = count - 1; i >= 0; i--) {
@@ -49,18 +51,8 @@ public class RpnEvaluationAlgorithm implements EvaluationAlgorithm {
     }
 
     private double applyOperator(Operator op, double[] args) {
-        if (op instanceof BinaryOperator) {
-            BinaryOperator binary = (BinaryOperator) op;
-            return binary.apply(args[0], args[1]);
-        }
-        if (op instanceof UnaryOperator) {
-            UnaryOperator unary = (UnaryOperator) op;
-            return unary.apply(args[0]);
-        }
-        throw new UnsupportedOperationException("Unknown operator type: " + op.getClass().getSimpleName());
-    }
-
-    private double finalizeResult(Deque<Double> stack) {
-        return stack.isEmpty() ? Double.NaN : stack.peek();
+        if (op instanceof BinaryOperator) return ((BinaryOperator) op).apply(args[0], args[1]);
+        if (op instanceof UnaryOperator) return ((UnaryOperator) op).apply(args[0]);
+        throw new UnknownOperatorException(op.getClass().getSimpleName());
     }
 }

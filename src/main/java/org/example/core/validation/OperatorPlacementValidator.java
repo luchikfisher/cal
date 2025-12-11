@@ -1,53 +1,37 @@
 package org.example.core.validation;
 
-import org.example.config.OperatorConfig;
+import lombok.RequiredArgsConstructor;
+import org.example.core.lexer.Lexer;
 import org.example.core.operators.factory.OperatorFactory;
 
-import java.util.stream.IntStream;
+import java.util.List;
 
+@RequiredArgsConstructor
 public class OperatorPlacementValidator implements ExpressionValidator {
 
-    private static final String PLUS = OperatorConfig.plusOperator();
-    private static final String MINUS = OperatorConfig.minusOperator();
+    private final Lexer lexer;
 
     @Override
-    public ValidationResult validate(String expr) {
-        if (hasInvalidOperatorPlacement(expr))
-            return ValidationResult.fail("Invalid operator placement");
+    public boolean validate(String expr) {
 
-        if (hasConsecutiveInvalidOperators(expr))
-            return ValidationResult.fail("Consecutive invalid operators");
+        List<String> tokens = lexer.tokenize(expr);
+        if (isBinary(tokens.get(0))) return false;
 
-        return ValidationResult.ok();
-    }
+        if (isBinary(tokens.get(tokens.size() - 1))) return false;
 
-    private boolean hasInvalidOperatorPlacement(String expr) {
-        String first = String.valueOf(expr.charAt(0));
-        String last = String.valueOf(expr.charAt(expr.length() - 1));
+        for (int i = 1; i < tokens.size(); i++) {
+            String prev = tokens.get(i - 1);
+            String curr = tokens.get(i);
 
-        boolean startsIllegal = OperatorFactory.getRegistry().containsKey(first)
-                && !first.equals(PLUS)
-                && !first.equals(MINUS);
-
-        return startsIllegal || OperatorFactory.getRegistry().containsKey(last);
-    }
-
-    private boolean hasConsecutiveInvalidOperators(String expr) {
-
-        return IntStream.range(1, expr.length()).anyMatch(i -> {
-
-            char prev = expr.charAt(i - 1);
-            char curr = expr.charAt(i);
-
-            boolean prevIsOp = OperatorFactory.getRegistry().containsKey(String.valueOf(prev));
-            boolean currIsOp = OperatorFactory.getRegistry().containsKey(String.valueOf(curr));
-
-            if (prevIsOp && currIsOp) {
-
-                return curr != '-' && curr != '+'; // VALID
+            if (isBinary(prev) && isBinary(curr)) {
+                return false;
             }
+        }
 
-            return false;
-        });
+        return true;
+    }
+
+    private boolean isBinary(String token) {
+        return OperatorFactory.getBinaryOperators().contains(token);
     }
 }

@@ -1,5 +1,7 @@
 package org.example.core.validation;
 
+import org.example.core.lexer.Lexer;
+
 import java.util.List;
 
 
@@ -7,22 +9,20 @@ public class DefaultExpressionValidator implements ExpressionValidator {
 
     private final List<ExpressionValidator> validators;
 
-    public DefaultExpressionValidator() {
+    public DefaultExpressionValidator(Lexer lexer) {
         this.validators = List.of(
                 new EmptyExpressionValidator(),
-                new OperatorPlacementValidator(),
                 new ParenthesesValidator(),
-                new FunctionCallValidator()
+                new OperatorPlacementValidator(lexer),
+                new FunctionCallValidator(lexer)
         );
     }
 
     @Override
-    public ValidationResult validate(String expr) {
+    public boolean validate(String expr) {
         for (ExpressionValidator v : validators) {
-            ValidationResult result = v.validate(expr);
-            if (!result.isValid()) return result; // Fail Fast
+            if (!v.validate(expr)) return false; // FAIL FAST
         }
-
-        return ValidationResult.ok();
+        return true;
     }
 }

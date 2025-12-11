@@ -5,4 +5,5 @@ public interface Operator {
     int getPrecedence();
     boolean isLeftAssociative();
     int getOperandCount();
+    default boolean isFunction() {return false;}
 }

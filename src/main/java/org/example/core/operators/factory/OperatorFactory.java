@@ -3,13 +3,13 @@ package org.example.core.operators.factory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.example.config.ConfigurationManager;
+import org.example.core.operators.base.BinaryOperator;
+import org.example.core.operators.base.UnaryOperator;
 import org.example.core.operators.base.Operator;
 import org.example.core.operators.impl.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class OperatorFactory {
@@ -24,22 +24,47 @@ public final class OperatorFactory {
                 Map.entry("operator.divide", new DivisionOperator()),
                 Map.entry("operator.sin", new SinOperator()),
                 Map.entry("operator.cos", new CosOperator()),
-                Map.entry("operator.unary.minus", new UnaryMinusOperator())
+                Map.entry("operator.unary.minus", new UnaryMinusOperator()),
+                Map.entry("operator.unary.plus", new UnaryPlusOperator())
         );
 
         defaults.forEach((configKey, operatorInstance) -> {
             String symbol = ConfigurationManager.getOrThrow(configKey);
-            if (symbol == null || symbol.isBlank()) {
-                throw new IllegalStateException("Missing operator symbol for key: " + configKey);
+            if (Objects.isNull(symbol) || symbol.isBlank()) {
+                throw new IllegalStateException(
+                        "Missing operator symbol for key: " + configKey
+                );
             }
             addOperator(symbol, operatorInstance);
         });
     }
 
     public static void addOperator(String symbol, Operator operator) {
-        if (symbol == null || operator == null)
+        if (Objects.isNull(symbol) || Objects.isNull(operator)) {
             throw new IllegalArgumentException("Symbol and operator must not be null");
+        }
         registry.put(symbol, operator);
+    }
+
+    public static Set<String> getBinaryOperators() {
+        return registry.entrySet().stream()
+                .filter(e -> e.getValue() instanceof BinaryOperator)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public static Set<String> getUnaryOperators() {
+        return registry.entrySet().stream()
+                .filter(e -> e.getValue() instanceof UnaryOperator)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public static Set<String> getFunctionNames() {
+        return registry.entrySet().stream()
+                .filter(e -> e.getValue().isFunction())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public static Optional<Operator> get(String symbol) {
