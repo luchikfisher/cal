@@ -17,7 +17,6 @@ public class InfixExpressionParser implements ExpressionParser {
     @Override
     public List<String> parse(String input) {
         return Optional.ofNullable(input)
-                .filter(s -> !s.isBlank())
                 .map(lexer::tokenize)
                 .orElse(List.of());
     }

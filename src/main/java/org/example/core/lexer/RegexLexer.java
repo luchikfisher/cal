@@ -56,11 +56,9 @@ public final class RegexLexer implements Lexer {
 
         while (matcher.find()) {
 
-            String raw = extractToken(matcher)
+            String token = extractToken(matcher)
                     .orElseThrow(() ->
                             new LexicalException("Unrecognized token: " + matcher.group()));
-
-            String token = applyUnary(raw, last);
 
             if (needsImplicitMultiplication(last, token)) {
                 tokens.add("*");
@@ -88,39 +86,6 @@ public final class RegexLexer implements Lexer {
         return Optional.empty();
     }
 
-    // ==========================
-    //       UNARY HANDLING
-    // ==========================
-
-    private String applyUnary(String token, String last) {
-        if (!"+".equals(token) && !"-".equals(token)) {
-            return token;
-        }
-
-        if (isUnaryContext(last)) {
-            return "+".equals(token) ? "u+" : "u-";
-        }
-
-        return token;
-    }
-
-    private boolean isUnaryContext(String last) {
-        return last == null
-                || LEFT_PAREN.equals(last)
-                || isOperator(last)
-                || isUnary(last);
-    }
-
-    private boolean isOperator(String token) {
-        return token != null && OPERATORS.contains(token);
-    }
-
-    private boolean isUnary(String token) {
-        return "u-".equals(token) || "u+".equals(token);
-    }
-    // ==========================
-    //   IMPLICIT MULTIPLICATION
-    // ==========================
     private boolean needsImplicitMultiplication(String prev, String curr) {
 
         if (isFunction(prev) && LEFT_PAREN.equals(curr)) {
@@ -133,9 +98,6 @@ public final class RegexLexer implements Lexer {
     private boolean isValue(String t) {
         if (t == null) return false;
 
-        // unary is NEVER a value
-        if ("u-".equals(t) || "u+".equals(t)) return false;
-
         return isNumber(t)
                 || isIdentifier(t)
                 || isFunction(t)
@@ -145,18 +107,12 @@ public final class RegexLexer implements Lexer {
     private boolean isPrefixValue(String t) {
         if (t == null) return false;
 
-        // unary is ALWAYS prefix-value
-        if ("u-".equals(t) || "u+".equals(t)) return true;
-
         return isNumber(t)
                 || isIdentifier(t)
                 || isFunction(t)
                 || LEFT_PAREN.equals(t);
     }
 
-    // ==========================
-    //   NUMBER / IDENTIFIER
-    // ==========================
     private boolean isNumber(String t) {
         boolean seenDot = false;
         if (t == null) return false;
@@ -174,9 +130,6 @@ public final class RegexLexer implements Lexer {
 
     private boolean isIdentifier(String t) {
         if (t == null) return false;
-
-        if ("u-".equals(t) || "u+".equals(t)) return false;
-
         return Character.isLetter(t.charAt(0));
     }
 

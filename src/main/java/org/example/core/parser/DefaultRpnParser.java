@@ -32,16 +32,13 @@ public class DefaultRpnParser implements RpnParser {
         return output;
     }
 
-    // -------------------------
-    // UNARY DETECTION (core fix)
-    // -------------------------
     private String detectUnary(String token, String prev) {
         if (!token.equals("+") && !token.equals("-")) return token;
 
         boolean unary =
-                prev == null                          // start of expression
-                        || OperatorFactory.getRegistry().containsKey(prev) // previous was operator
-                        || prev.equals("(");                  // ( +10 )
+                prev == null
+                        || OperatorFactory.getRegistry().containsKey(prev)
+                        || prev.equals("(");
 
         if (unary) {
             return token.equals("+") ? "u+" : "u-";
@@ -50,9 +47,6 @@ public class DefaultRpnParser implements RpnParser {
         return token;
     }
 
-    // -------------------------
-    // TOKEN HANDLING
-    // -------------------------
     private void handleToken(String token, List<String> output, Deque<String> stack) {
 
         if (LEFT_PAREN.equals(token)) {

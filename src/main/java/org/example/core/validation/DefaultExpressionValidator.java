@@ -13,7 +13,6 @@ public class DefaultExpressionValidator implements ExpressionValidator {
         this.validators = List.of(
                 new EmptyExpressionValidator(),
                 new ParenthesesValidator(),
-                new OperatorPlacementValidator(lexer),
                 new FunctionCallValidator(lexer)
         );
     }
