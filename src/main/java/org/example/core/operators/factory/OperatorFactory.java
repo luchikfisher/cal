@@ -73,6 +73,14 @@ public final class OperatorFactory {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    public static boolean isUnaryCandidate(String symbol) {
+        return getUnaryOperators().contains(symbol);
+    }
+
+    public static boolean isOperator(String symbol) {
+        return get(symbol).isPresent();
+    }
+
     public static Optional<Operator> get(String symbol) {
         return Optional.ofNullable(registry.get(symbol));
     }

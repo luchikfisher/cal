@@ -33,15 +33,17 @@ public class DefaultRpnParser implements RpnParser {
     }
 
     private String detectUnary(String token, String prev) {
-        if (!token.equals("+") && !token.equals("-")) return token;
+        if (!OperatorFactory.isUnaryCandidate(token)) {
+            return token;
+        }
 
         boolean unary =
                 prev == null
-                        || OperatorFactory.getRegistry().containsKey(prev)
+                        || OperatorFactory.isOperator(prev)
                         || prev.equals("(");
 
         if (unary) {
-            return token.equals("+") ? "u+" : "u-";
+            return token;
         }
 
         return token;

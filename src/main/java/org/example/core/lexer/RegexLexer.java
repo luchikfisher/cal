@@ -31,12 +31,6 @@ public final class RegexLexer implements Lexer {
 
     private static final Set<String> FUNCTIONS = OperatorFactory.getFunctionNames();
 
-    private static final Set<String> OPERATORS =
-            Stream.concat(
-                    OperatorFactory.getBinaryOperators().stream(),
-                    OperatorFactory.getUnaryOperators().stream()
-            ).collect(Collectors.toUnmodifiableSet());
-
     private static final String LEFT_PAREN = String.valueOf(OperatorConfig.leftParen());
     private static final String RIGHT_PAREN = String.valueOf(OperatorConfig.rightParen());
 
