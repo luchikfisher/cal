@@ -1,6 +1,7 @@
 package org.example.core.parser;
 
 import lombok.RequiredArgsConstructor;
+import org.example.config.ConfigurationManager;
 import org.example.config.OperatorConfig;
 import org.example.core.operators.base.Operator;
 import org.example.core.operators.factory.OperatorFactory;
@@ -33,17 +34,19 @@ public class DefaultRpnParser implements RpnParser {
     }
 
     private String detectUnary(String token, String prev) {
-        if (!OperatorFactory.isUnaryCandidate(token)) {
+        if (!token.equals(OperatorConfig.plusOperator()) && !token.equals(OperatorConfig.minusOperator())) {
             return token;
         }
 
         boolean unary =
                 prev == null
                         || OperatorFactory.isOperator(prev)
-                        || prev.equals("(");
+                        || prev.equals(LEFT_PAREN);
 
         if (unary) {
-            return token;
+            return token.equals(OperatorConfig.plusOperator())
+                    ? ConfigurationManager.getOrThrow("operator.unary.plus")
+                    : ConfigurationManager.getOrThrow("operator.unary.minus");
         }
 
         return token;
