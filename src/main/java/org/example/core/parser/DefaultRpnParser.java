@@ -34,22 +34,29 @@ public class DefaultRpnParser implements RpnParser {
     }
 
     private String detectUnary(String token, String prev) {
-        if (!token.equals(OperatorConfig.plusOperator()) && !token.equals(OperatorConfig.minusOperator())) {
+        if (OperatorFactory.isUnaryCandidate(token)) {
             return token;
         }
 
-        boolean unary =
-                prev == null
-                        || OperatorFactory.isOperator(prev)
-                        || prev.equals(LEFT_PAREN);
+        boolean isPlusOrMinus =
+                token.equals(OperatorConfig.plusOperator()) || token.equals(OperatorConfig.minusOperator());
 
-        if (unary) {
-            return token.equals(OperatorConfig.plusOperator())
-                    ? ConfigurationManager.getOrThrow("operator.unary.plus")
-                    : ConfigurationManager.getOrThrow("operator.unary.minus");
+        if (!isPlusOrMinus) {
+            return token;
         }
 
-        return token;
+        boolean unaryContext =
+                prev == null
+                        || OperatorFactory.isOperator(prev)
+                        || LEFT_PAREN.equals(prev);
+
+        if (!unaryContext) {
+            return token;
+        }
+
+        return token.equals(OperatorConfig.plusOperator())
+                ? OperatorConfig.unaryPlusOperator()
+                : OperatorConfig.unaryMinusOperator();
     }
 
     private void handleToken(String token, List<String> output, Deque<String> stack) {

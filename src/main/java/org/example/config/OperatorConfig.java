@@ -29,8 +29,12 @@ public final class OperatorConfig {
         return ConfigurationManager.getOrThrow("operator.right.paren").charAt(0);
     }
 
-    public static char unaryMinusOperator() {
-        return ConfigurationManager.getOrThrow("operator.unary.minus").charAt(0);
+    public static String unaryMinusOperator() {
+        return ConfigurationManager.getOrThrow("operator.unary.minus");
+    }
+
+    public static String unaryPlusOperator() {
+        return ConfigurationManager.getOrThrow("operator.unary.plus");
     }
 
     public static String allowedOperatorChars() {
